@@ -1,6 +1,6 @@
 /**
- * Created by Jacob Strieb
- * May 2020
+ * Styles for the self-hosted Link Lock fork.
+ * Based on the original by Jacob Strieb (May 2020), MIT licensed.
  */
 
 
@@ -106,18 +106,51 @@ code {
  * Classes
  ******************************************************************************/
 
-/* View on GitHub SVG ribbon */
-@media (max-width: 100ch) {
-  .ribbon {
-    width: 100px;
-    height: 100px;
-  }
+/* Hidden elements (toggled from JS instead of inline styles, for a strict CSP) */
+.hidden {
+  display: none;
 }
 
-.ribbon {
-  position: absolute;
-  top: 0;
-  right: 0;
+/* Language switcher */
+.lang-switch {
+  text-align: right;
+  margin-bottom: 10px;
+}
+
+.lang-switch button {
+  padding: 4px 10px;
+  margin-top: 0;
+}
+
+.lang-switch button[aria-pressed="true"] {
+  background: rgb(60, 110, 112);
+  border-color: rgb(60, 110, 112);
+}
+
+
+/* Button hierarchy: primary call-to-action vs secondary action */
+.btn-primary {
+  display: block;
+  width: 100%;
+  margin-top: 20px;
+  padding: 14px;
+}
+
+.btn-secondary {
+  background: none;
+  color: rgb(95, 158, 160);
+  border: 2px solid rgb(95, 158, 160);
+}
+
+.btn-secondary:hover {
+  background: rgb(95, 158, 160);
+  color: white;
+}
+
+
+/* Decrypted-link preview (unlock page) */
+.preview {
+  margin-top: 25px;
 }
 
 
@@ -151,36 +184,6 @@ code {
 
 
 
-/* Advanced settings */
-#advanced-label {
-  cursor: pointer;
-  margin-bottom: 10px;
-}
-
-.advanced {
-  display: flex;
-  flex-flow: row wrap;
-}
-
-.advanced .labeled-input {
-  display: flex;
-  flex-flow: row-reverse nowrap;
-  justify-content: flex-end;
-}
-
-.advanced .labeled-input label {
-  width: auto;
-  margin-right: 20px;
-  white-space: nowrap;
-  cursor: pointer;
-}
-
-.advanced .labeled-input input {
-  width: auto;
-  margin-right: 5px;
-}
-
-
 /* Output area */
 .output input {
   background: rgba(235, 235, 235, 1);
@@ -189,48 +192,5 @@ code {
 .alert {
   opacity: 0;
   transition: opacity 0.25s;
-}
-
-
-/* Bookmarks that look like buttons, but different */
-.bookmark {
-  padding: 11px;
-  background: none;
-  color: rgb(95, 158, 160);
-  border: 3px solid;
-  border-radius: 5px;
-  font-weight: bold;
-  text-decoration: none;
-  margin-top: 5px;
-  margin-right: 5px;
-  cursor: pointer;
-  display: inline-block;
-  margin: auto;
-  text-align: center;
-}
-
-.bookmark:hover {
-  background: rgb(95, 158, 160);
-  color: white;
-  border: 3px solid rgb(95, 158, 160);
-}
-
-.bookmark[aria-disabled="true"] {
-  background: rgba(235, 235, 235, 1);
-  color: gray;
-}
-
-/* Buttons on the same line as inputs */
-.inline-button-container {
-  display: flex;
-  width: 100%;
-}
-
-.inline-button-container * {
-  margin: 5px;
-}
-
-.inline-button-container input {
-  margin-left: 0;
 }
 

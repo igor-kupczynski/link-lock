@@ -1,175 +1,123 @@
 /**
- * Created by Jacob Strieb
- * May 2020
+ * Create page: encrypt a destination URL with a password and produce a locked
+ * link pointing at this same deployment's unlock page.
  */
 
+const MIN_PASSWORD_LENGTH = 12;
+const GENERATED_PASSWORD_LENGTH = 20;
+const PASSWORD_ALPHABET =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 
-
-/*******************************************************************************
- * Helper Functions
- ******************************************************************************/
-
-// Highlight the text in an input with a given id
-function highlight(id) {
-  let output = document.querySelector("#" + id);
-  output.focus();
-  output.select()
-  output.setSelectionRange(0, output.value.length + 1);
-  return output;
+function showError(text) {
+  const box = document.querySelector(".error");
+  box.classList.remove("hidden");
+  document.querySelector("#errortext").innerText = text;
 }
 
+function clearError() {
+  document.querySelector(".error").classList.add("hidden");
+}
 
-// Validate all inputs, and display an error if necessary
-function validateInputs() {
-  var inputs = document.querySelectorAll(".form .labeled-input input");
-  for (let i = 0; i < inputs.length; i++) {
-    let input = inputs[i];
-    input.reportValidity = input.reportValidity || (() => true);
-    if (!input.reportValidity()) {
-      return false;
+// Generate a strong random password using crypto.getRandomValues with rejection
+// sampling so the alphabet is unbiased.
+function generatePassword(length) {
+  const max = Math.floor(256 / PASSWORD_ALPHABET.length) * PASSWORD_ALPHABET.length;
+  let out = "";
+  const buf = new Uint8Array(1);
+  while (out.length < length) {
+    crypto.getRandomValues(buf);
+    if (buf[0] < max) {
+      out += PASSWORD_ALPHABET[buf[0] % PASSWORD_ALPHABET.length];
     }
   }
+  return out;
+}
 
-  // Extra check for older browsers for URL input. Not sure if necessary, since
-  // older browsers without built-in HTML5 validation may fail elsewhere.
-  const url = document.querySelector("#url");
+// The unlock page lives one directory up from /create/. Build an absolute URL to
+// it from the current location so the output works on any host (no hardcoding).
+function unlockBaseUrl() {
+  return new URL("../", window.location.href).href;
+}
+
+function flashAlert(message) {
+  const alertArea = document.querySelector(".alert");
+  alertArea.innerText = message;
+  alertArea.style.opacity = "1";
+  setTimeout(() => { alertArea.style.opacity = "0"; }, 3000);
+}
+
+async function onEncrypt() {
+  clearError();
+
+  const urlInput = document.querySelector("#url");
+  const url = urlInput.value;
+
+  // Validate the destination URL and restrict it to https://.
   let urlObj;
   try {
-    urlObj = new URL(url.value);
+    urlObj = new URL(url);
   } catch {
-    if (!("reportValidity" in url)) {
-      alert("URL invalid. Make sure to include 'http://' or 'https://' at the "
-          + "beginning.");
-    }
-    return false;
+    showError(I18N.t("valid.url"));
+    return;
   }
-
-  // Check for non-HTTP protocols; blocks them to prevent XSS attacks. Also
-  // allow magnet links for password-protected torrents.
-  if (!(urlObj.protocol == "http:"
-        || urlObj.protocol == "https:"
-        || urlObj.protocol == "magnet:")) {
-    url.setCustomValidity("The link uses a non-hypertext protocol, which is "
-        + "not allowed. The URL begins with " + urlObj.protocol + " and may be "
-        + "malicious.");
-    url.reportValidity();
-    return false;
-  }
-
-  return true;
-}
-
-
-// Perform encryption based on parameters, and return a base64-encoded JSON
-// object containing all of the relevant data for use in the URL fragment.
-async function generateFragment(url, passwd, hint, useRandomSalt, useRandomIv) {
-  const api = apiVersions[LATEST_API_VERSION];
-
-  const salt = useRandomSalt ? await api.randomSalt() : null;
-  const iv = useRandomIv ? await api.randomIv() : null;
-  const encrypted = await api.encrypt(url, passwd, salt, iv);
-  const output = {
-    v: LATEST_API_VERSION,
-    e: b64.binaryToBase64(new Uint8Array(encrypted))
-  }
-
-  // Add the hint if there is one
-  if (hint != "") {
-    output["h"] = hint;
-  }
-
-  // Add the salt and/or initialization vector if randomly generated
-  if (useRandomSalt) {
-    output["s"] = b64.binaryToBase64(salt);
-  }
-  if (useRandomIv) {
-    output["i"] = b64.binaryToBase64(iv);
-  }
-
-  // Return the base64-encoded output
-  return b64.encode(JSON.stringify(output));
-}
-
-
-
-/*******************************************************************************
- * Main UI Functions
- ******************************************************************************/
-
-// Activated when the "Encrypt" button is pressed
-async function onEncrypt() {
-  if (!validateInputs()) {
+  if (urlObj.protocol !== "https:") {
+    showError(I18N.t("valid.protocol"));
     return;
   }
 
-  // Check that password is successfully confirmed
   const password = document.querySelector("#password").value;
-  const confirmPassword = document.querySelector("#confirm-password")
-  const confirmation = confirmPassword.value;
-  if (password != confirmation) {
-    confirmPassword.setCustomValidity("Passwords do not match");
-    confirmPassword.reportValidity();
+  const confirmation = document.querySelector("#confirm-password").value;
+  if (password.length < MIN_PASSWORD_LENGTH) {
+    showError(I18N.t("valid.tooShort"));
+    return;
+  }
+  if (password !== confirmation) {
+    showError(I18N.t("valid.mismatch"));
     return;
   }
 
-  // Initialize values for encryption
-  const url = document.querySelector("#url").value;
-  const useRandomIv = document.querySelector("#iv").checked;
-  const useRandomSalt = document.querySelector("#salt").checked;
-
-  const hint = document.querySelector("#hint").value
-
-  const encrypted = await generateFragment(url, password, hint, useRandomSalt,
-      useRandomIv);
-  const output = `https://jstrieb.github.io/link-lock/#${encrypted}`;
+  const fragment = await api.encryptUrl(url, password);
+  const output = unlockBaseUrl() + "#" + fragment;
 
   document.querySelector("#output").value = output;
-  highlight("output");
-
-  // Adjust "Hidden Bookmark" link
-  document.querySelector("#bookmark").href = `https://jstrieb.github.io/link-lock/hidden/#${encrypted}`;
-
-  // Adjust "Open in New Tab" link
   document.querySelector("#open").href = output;
-
-  // Adjust "Get TinyURL" button
-  // document.querySelector("#tinyurl").value = output;
-
-  // Scroll to the bottom so the user sees where the bookmark was created
-  window.scrollTo({
-    top: document.body.scrollHeight,
-    behavior: "smooth",
-  });
 }
 
-
-// Activated when the "Copy" button is pressed
-function onCopy(id) {
-  // Select and copy
-  const output = highlight(id);
-  document.execCommand("copy");
-
-  // Alert the user that the text was successfully copied
-  const alertArea = document.querySelector(".alert");
-  alertArea.innerText = `Copied ${output.value.length} characters`;
-  alertArea.style.opacity = "1";
-  setTimeout(() => { alertArea.style.opacity = 0; }, 3000);
-
-  // Deselect
-  output.selectionEnd = output.selectionStart;
-  output.blur();
-}
-
-
-// Activated when a user tries to disable randomization of the IV -- adds a
-// scary warning that will frighten off anyone with common sense, unless they
-// desperately need the URL to be a few characters shorter.
-function onIvCheck(checkbox) {
-  if (!checkbox.checked) {
-    checkbox.checked = !confirm("Please only disable initialization vector "
-        + "randomization if you know what you are doing. Disabling this is "
-        + "detrimental to the security of your encrypted link, and it only "
-        + "saves 20-25 characters in the URL length.\n\nPress \"Cancel\" unless "
-        + "you are very sure you know what you are doing.");
+async function onCopy() {
+  const output = document.querySelector("#output");
+  if (!output.value) {
+    return;
   }
+  try {
+    await navigator.clipboard.writeText(output.value);
+  } catch {
+    // Fallback for older browsers / insecure contexts.
+    output.focus();
+    output.select();
+    document.execCommand("copy");
+  }
+  flashAlert(I18N.t("create.copied"));
 }
+
+function onGenerate() {
+  const pw = generatePassword(GENERATED_PASSWORD_LENGTH);
+  document.querySelector("#password").value = pw;
+  document.querySelector("#confirm-password").value = pw;
+  clearError();
+}
+
+function main() {
+  I18N.init();
+
+  if (!("b64" in window) || !("api" in window)) {
+    showError(I18N.t("err.libraries"));
+    return;
+  }
+
+  document.querySelector("#generate").addEventListener("click", onGenerate);
+  document.querySelector("#encrypt").addEventListener("click", onEncrypt);
+  document.querySelector("#copy").addEventListener("click", onCopy);
+  document.querySelector("#url").addEventListener("input", clearError);
+}
+
+document.addEventListener("DOMContentLoaded", main);
