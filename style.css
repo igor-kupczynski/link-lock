@@ -1,196 +1,268 @@
 /**
  * Styles for the self-hosted Link Lock fork.
  * Based on the original by Jacob Strieb (May 2020), MIT licensed.
+ * Minimal, dependency-free, single-accent design.
  */
+
+:root {
+  --bg: #eef0f4;
+  --card: #ffffff;
+  --text: #1f2937;
+  --muted: #6b7280;
+  --border: #d1d5db;
+  --field-bg: #ffffff;
+  --readonly-bg: #f3f4f6;
+  --accent: #0f766e;
+  --accent-hover: #115e59;
+  --accent-soft: rgba(15, 118, 110, 0.15);
+  --danger-bg: #fdecec;
+  --danger-border: #f0b4b4;
+  --danger-text: #9b1c1c;
+  --radius: 10px;
+}
 
 
 /*******************************************************************************
- * Element styles
+ * Layout
  ******************************************************************************/
 
 html {
-  font-family: sans-serif;
-  padding: 10px;
+  box-sizing: border-box;
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+}
+
+*, *::before, *::after {
+  box-sizing: inherit;
 }
 
 body {
-  padding: 15px;
-  display: block;
-  margin: auto;
-  max-width: 66ch;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  color: var(--text);
+  line-height: 1.5;
+  max-width: 620px;
+  margin: 48px auto;
+  padding: 36px 40px 44px;
+  background: var(--card);
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(17, 24, 39, 0.06),
+              0 12px 32px rgba(17, 24, 39, 0.08);
+}
+
+@media (max-width: 680px) {
+  body {
+    margin: 0;
+    padding: 24px 20px 32px;
+    border-radius: 0;
+    box-shadow: none;
+    min-height: 100vh;
+  }
+}
+
+h1 {
+  font-size: 1.7rem;
+  font-weight: 700;
+  margin: 0.2em 0 0.8em;
 }
 
 p {
-  text-align: justify;
-}
-
-ul, ol {
-  padding-left: 1em;
-}
-
-ol li {
-  margin-bottom: 1em;
-}
-
-button {
-  padding: 11px;
-  background: rgb(95, 158, 160);
-  color: white;
-  border: 0.5px solid white;
-  border-radius: 5px;
-  margin-top: 5px;
-  margin-right: 5px;
-  cursor: pointer;
-  font-weight: bold;
-  white-space: nowrap;
-}
-
-label {
-  display: block;
-  font-variant: small-caps;
-  margin-bottom: 5px;
-}
-
-summary {
-  font-variant: small-caps;
-  margin-bottom: 5px;
-  user-select: none;
-}
-
-input, textarea {
-  padding: 10px;
-  border: 0.5px solid black;
-  border-radius: 3px;
-  margin-bottom: 15px;
-  box-sizing: border-box;
-  width: 100%;
-  resize: none;
-  font-family: sans-serif;
-  font-size: 0.9em;
-}
-
-input[type="checkbox"] {
-  cursor: pointer;
-  margin-right: 0;
+  margin: 0 0 1em;
 }
 
 hr {
-  margin-top: 3em;
-  margin-bottom: 3em;
   border: 0;
-  border-top: 0.5px solid rgba(200, 200, 200, 1);
-}
-
-footer hr {
-  margin-bottom: 1em;
-  border-top: 0.5px solid black;
-}
-
-footer p {
-  text-align: center;
-}
-
-*[aria-disabled="true"] {
-  pointer-events: none;
-  cursor: not-allowed;
-  user-select: none;
-}
-
-code {
-  font-family: monospace, monospace;
-  padding: 0 3px;
+  border-top: 1px solid var(--border);
+  margin: 28px 0;
 }
 
 
 /*******************************************************************************
- * Classes
+ * Form fields
  ******************************************************************************/
 
-/* Hidden elements (toggled from JS instead of inline styles, for a strict CSP) */
+label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 7px;
+}
+
+input, textarea {
+  width: 100%;
+  padding: 11px 13px;
+  font-family: inherit;
+  font-size: 0.95rem;
+  color: var(--text);
+  background: var(--field-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 18px;
+  resize: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+input:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+input[readonly] {
+  background: var(--readonly-bg);
+  color: var(--muted);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+}
+
+
+/*******************************************************************************
+ * Buttons
+ ******************************************************************************/
+
+button {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 11px 18px;
+  color: #fff;
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+button:hover {
+  background: var(--accent-hover);
+  border-color: var(--accent-hover);
+}
+
+button:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px var(--accent-soft);
+}
+
+a {
+  color: var(--accent);
+}
+
+/* Primary call-to-action: full width, prominent */
+.btn-primary {
+  display: block;
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  margin-top: 8px;
+}
+
+/* Secondary action: outlined, fills only its content width */
+.btn-secondary {
+  background: none;
+  color: var(--accent);
+  border: 1px solid var(--accent);
+}
+
+.btn-secondary:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+
+/*******************************************************************************
+ * Components
+ ******************************************************************************/
+
 .hidden {
   display: none;
 }
 
 /* Language switcher */
 .lang-switch {
-  text-align: right;
-  margin-bottom: 10px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-bottom: 18px;
 }
 
 .lang-switch button {
-  padding: 4px 10px;
-  margin-top: 0;
+  padding: 4px 12px;
+  font-size: 0.8rem;
+  background: none;
+  color: var(--muted);
+  border: 1px solid var(--border);
+}
+
+.lang-switch button:hover {
+  background: var(--readonly-bg);
+  border-color: var(--border);
+  color: var(--text);
 }
 
 .lang-switch button[aria-pressed="true"] {
-  background: rgb(60, 110, 112);
-  border-color: rgb(60, 110, 112);
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
 }
 
-
-/* Button hierarchy: primary call-to-action vs secondary action */
-.btn-primary {
-  display: block;
-  width: 100%;
-  margin-top: 20px;
-  padding: 14px;
+/* Password + confirm side by side */
+.split-row {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 18px;
 }
 
-.btn-secondary {
-  background: none;
-  color: rgb(95, 158, 160);
-  border: 2px solid rgb(95, 158, 160);
+.split-row .labeled-input {
+  flex: 1 1 200px;
 }
 
-.btn-secondary:hover {
-  background: rgb(95, 158, 160);
-  color: white;
+/* Generate-password sits with the password block, above the primary action */
+#generate {
+  margin-bottom: 8px;
 }
 
+/* Output / preview */
+.output, .preview {
+  margin-top: 6px;
+}
 
-/* Decrypted-link preview (unlock page) */
 .preview {
-  margin-top: 25px;
+  margin-top: 24px;
 }
 
+/* Adjacent action buttons in a row (e.g. Copy + Open) */
+.output > button,
+.output > a,
+.preview > a {
+  margin-right: 8px;
+}
 
-/* Error area */
+.alert {
+  opacity: 0;
+  color: var(--accent);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-top: 10px;
+  transition: opacity 0.25s;
+}
+
+/* Error / no-JavaScript notice */
 .red-border {
-  border: 3px solid red;
-  padding: 2em;
+  background: var(--danger-bg);
+  border: 1px solid var(--danger-border);
+  color: var(--danger-text);
+  border-radius: var(--radius);
+  padding: 18px 20px;
 }
 
 .error, .error p {
   text-align: center;
 }
 
-
-/* Password & Confirm Password inputs */
-.split-row {
-  display: flex;
-  flex-flow: row wrap;
-  justify-content: space-between;
-  align-items: center;
+.error p {
+  margin-bottom: 14px;
 }
-
-.password {
-  flex: 1;
-}
-
-.confirm-password {
-  flex: 1;
-  margin-left: 20px;
-}
-
-
-
-/* Output area */
-.output input {
-  background: rgba(235, 235, 235, 1);
-}
-
-.alert {
-  opacity: 0;
-  transition: opacity 0.25s;
-}
-
